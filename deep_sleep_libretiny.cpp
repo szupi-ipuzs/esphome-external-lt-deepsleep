@@ -103,22 +103,28 @@ void DeepSleepLibretiny::begin_sleep(bool manual) {
   if (this->sleep_duration_.has_value()) {
     ESP_LOGI(TAG, "Sleeping for %" PRId64 "us", *this->sleep_duration_);
   }
+
+  for (WakeUpPinItem &item : this->wakeup_pins_) {
+    if (item.wakeup_pin_mode == WAKEUP_PIN_MODE_INVERT_WAKEUP) {
+      if (item.wakeup_level == get_real_pin_state(*item.wakeup_pin))
+      {
+        item.wakeup_level = !item.wakeup_level;
+      }
+    }
+    ESP_LOGI(TAG, "Wake-up on P%u %s (%d)", item.wakeup_pin->get_pin(), item.wakeup_level? "HIGH" : "LOW", static_cast<int32_t>(item.wakeup_pin_mode));
+  }
   App.run_safe_shutdown_hooks();
 
   if (this->sleep_duration_.has_value())
     lt_deep_sleep_config_timer((*this->sleep_duration_ / 1000) & 0xFFFFFFFF);
-  if (wakeup_pins_.size() > 0) {
-    for (WakeUpPinItem &item : this->wakeup_pins_) {
-      if (item.wakeup_pin_mode == WAKEUP_PIN_MODE_INVERT_WAKEUP) {
-        item.wakeup_level = !get_real_pin_state(*item.wakeup_pin);
-      }
-      ESP_LOGI(TAG, "Wake-up on P%u %s", item.wakeup_pin->get_pin(), item.wakeup_level? "HIGH" : "LOW");
-      lt_deep_sleep_config_gpio(1 << item.wakeup_pin->get_pin(),
-                                item.wakeup_level);
-      lt_deep_sleep_keep_floating_gpio(1 << item.wakeup_pin->get_pin(),
-                                item.wakeup_level);
-    }
+
+  for (WakeUpPinItem &item : this->wakeup_pins_) {
+    lt_deep_sleep_config_gpio(1 << item.wakeup_pin->get_pin(),
+                              item.wakeup_level);
+    lt_deep_sleep_keep_floating_gpio(1 << item.wakeup_pin->get_pin(),
+                              true);
   }
+
   lt_deep_sleep_enter();
 }
 float DeepSleepLibretiny::get_setup_priority() const {
