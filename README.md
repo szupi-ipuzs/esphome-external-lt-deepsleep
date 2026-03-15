@@ -1,3 +1,6 @@
+# ARCHIVED
+Deep sleep on bk7231 chips is now supported natively in ESPHome, there is no need to use this external component.
+
 ## deep_sleep_libretiny
 This is a copy of the esphome's deep_sleep component implementation for libretiny. It was taken from esphome-libretiny (an early fork of esphome), where it was [posted as a PR](https://github.com/libretiny-eu/libretiny-esphome/pull/11) that never made it to esphome.
 The code has been cleaned-out to leave only what relates to the beken bk7231 chips.
